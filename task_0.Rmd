@@ -1,0 +1,59 @@
+---
+title: "Task 0 - Get the data"
+author: "Francisco Marco-Serrano"
+output: html_document
+---
+
+The first step in analysing any new data set is figuring out: (a) what data you have and (b) what are the standard tools and models used for that type of data. The dataset provided here is part of the Yelp Dataset Challenge and the specific dataset used in here corresponds to Round 6 of their challenge. The dataset is approximately 575MB.
+
+Data: https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/yelp_dataset_challenge_academic_dataset.zip
+
+
+```{r}
+library(jsonlite)
+
+readmyJSON <- function(myfile){
+  df <- fromJSON(sprintf("[%s]", paste(readLines(myfile), collapse=",")))
+  df
+}
+
+#See http://stackoverflow.com/a/26522000 for overcoming 'Error in feed_push_parser...'
+biz.df <- readmyJSON('./data/yelp_academic_dataset_business.json')
+dim(biz.df)
+names(biz.df)
+save(biz.df, file="./data/biz.RData")
+
+checkin.df <- readmyJSON('./data/yelp_academic_dataset_checkin.json')
+dim(checkin.df)
+names(checkin.df)
+save(biz.df, file="./data/checkin.RData")
+
+review.df <- readmyJSON('./data/yelp_academic_dataset_review.json')
+dim(review.df)
+names(review.df)
+save(review.df, file="./data/review.RData")
+
+tip.df <- readmyJSON('./data/yelp_academic_dataset_tip.json')
+dim(tip.df)
+names(tip.df)
+save(tip.df, file="./data/tip.RData")
+
+user.df <- readmyJSON('./data/yelp_academic_dataset_user.json')
+dim(user.df)
+names(user.df)
+save(user.df, file="./data/user.RData")
+
+```
+
+##Tasks to accomplish
+
+*Learn about Yelp and what kinds of data it collects
+*Obtaining the data - Can you download the data and load it in R?
+*Familiarising with the metadata - What features/variables are included? What data is stored in each of the different files? How can you link the information from the different files together?
+
+##Questions to consider
+
+*What do the data look like?
+*Where do the data come from?
+*Can we think of any other data sources that might help us in this project?
+*What are some common issues in the analysis of text data?

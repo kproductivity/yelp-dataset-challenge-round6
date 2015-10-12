@@ -13,47 +13,47 @@ Data: https://d396qusza40orc.cloudfront.net/dsscapstone/dataset/yelp_dataset_cha
 library(jsonlite)
 
 readmyJSON <- function(myfile){
-  df <- fromJSON(sprintf("[%s]", paste(readLines(myfile), collapse=",")))
+  # See http://stackoverflow.com/a/26522000 for overcoming 'Error in
+  # feed_push_parser...'
+  # df <- fromJSON(sprintf("[%s]", paste(readLines(myfile), collapse=",")))
+  # See http://stackoverflow.com/questions/29688946/reading-a-huge-json-file-in-r-issues
+  df <- stream_in(file(myfile), pagesize = 10000)
+  dim(df)
+  names(df)
   df
-}
+} 
 
-#See http://stackoverflow.com/a/26522000 for overcoming 'Error in feed_push_parser...'
 biz.df <- readmyJSON('./data/yelp_academic_dataset_business.json')
-dim(biz.df)
-names(biz.df)
-save(biz.df, file="./data/biz.RData")
+saveRDS(biz.df, file="./data/biz.RData")
+rm(biz.df)
 
 checkin.df <- readmyJSON('./data/yelp_academic_dataset_checkin.json')
-dim(checkin.df)
-names(checkin.df)
-save(biz.df, file="./data/checkin.RData")
+saveRDS(checkin.df, file="./data/checkin.RData")
+rm(checkin.df)
 
 review.df <- readmyJSON('./data/yelp_academic_dataset_review.json')
-dim(review.df)
-names(review.df)
-save(review.df, file="./data/review.RData")
+saveRDS(review.df, file="./data/review.RData")
+rm(review.df)
 
 tip.df <- readmyJSON('./data/yelp_academic_dataset_tip.json')
-dim(tip.df)
-names(tip.df)
-save(tip.df, file="./data/tip.RData")
+saveRDS(tip.df, file="./data/tip.RData")
+rm(tip.df)
 
 user.df <- readmyJSON('./data/yelp_academic_dataset_user.json')
-dim(user.df)
-names(user.df)
-save(user.df, file="./data/user.RData")
+saveRDS(user.df, file="./data/user.RData")
+rm(user.df)
 
 ```
 
 ##Tasks to accomplish
 
-*Learn about Yelp and what kinds of data it collects
-*Obtaining the data - Can you download the data and load it in R?
-*Familiarising with the metadata - What features/variables are included? What data is stored in each of the different files? How can you link the information from the different files together?
+* Learn about Yelp and what kinds of data it collects
+* Obtaining the data - Can you download the data and load it in R?
+* Familiarising with the metadata - What features/variables are included? What data is stored in each of the different files? How can you link the information from the different files together?
 
 ##Questions to consider
 
-*What do the data look like?
-*Where do the data come from?
-*Can we think of any other data sources that might help us in this project?
-*What are some common issues in the analysis of text data?
+* What do the data look like?
+* Where do the data come from?
+* Can we think of any other data sources that might help us in this project?
+* What are some common issues in the analysis of text data?

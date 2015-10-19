@@ -53,6 +53,7 @@ rm(user.df)
 
 #Read json file
 #See http://www.r-bloggers.com/iterators-in-r/
+require(itertools)
 con <- ihasNext(ireadLines(myfile))
 
 df <- data.frame()
@@ -78,6 +79,8 @@ for (file in myfiles){
         rm(temp_df)
     }
 }
+
+saveRDS(df, file="./data/review.RData")
 
 ```
 

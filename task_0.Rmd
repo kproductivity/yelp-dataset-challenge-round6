@@ -72,7 +72,7 @@ while (hasNext(con)) {
 }
 
 #read files and merge
-myfiles <- list.files(path="./data/reviews/", pattern=".csv", full.names = T,)
+myfiles <- list.files(path="./data/reviews/", pattern=".csv", full.names = T)
 
 for (file in myfiles){
     if (!exists("df")){

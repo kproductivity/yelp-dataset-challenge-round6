@@ -51,9 +51,13 @@ rm(user.df)
 ##Alternative solution for low-mem systems
 ```{r}
 
+start.time <- proc.time()
+
 #Read json file
+require(jsonlite)
 #See http://www.r-bloggers.com/iterators-in-r/
 require(itertools)
+myfile <- './data/yelp_academic_dataset_review.json'
 con <- ihasNext(ireadLines(myfile))
 
 df <- data.frame()
@@ -63,12 +67,12 @@ numfile <- 1
 while (hasNext(con)) {
     d <- nextElem(con)
     df <- as.data.frame(fromJSON(d))
-    write.csv(df, file=paste("./data/reviews", numfile, ".csv"), sep=",", row.names="F")
+    write.csv(df, file=paste("./data/reviews/reviews", numfile, ".csv", sep=""), sep=",", row.names="F")
     numfile <- numfile+1
 }
 
 #read files and merge
-myfiles <- list.files(path="./data/", pattern=".csv")
+myfiles <- list.files(path="./data/reviews/", pattern=".csv", full.names = T,)
 
 for (file in myfiles){
     if (!exists("df")){
@@ -81,6 +85,8 @@ for (file in myfiles){
 }
 
 saveRDS(df, file="./data/review.RData")
+
+proc.time() - start.time
 
 ```
 

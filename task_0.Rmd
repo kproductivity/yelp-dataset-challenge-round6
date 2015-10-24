@@ -15,13 +15,22 @@ library(jsonlite)
 readmyJSON <- function(myfile){
   # See http://stackoverflow.com/a/26522000 for overcoming 'Error in
   # feed_push_parser...'
+<<<<<<< HEAD
   df <- fromJSON(sprintf("[%s]", paste(readLines(myfile), collapse=",")))
   # See http://stackoverflow.com/questions/29688946/reading-a-huge-json-file-in-r-issues
   #df <- stream_in(file(myfile), pagesize = 10000)
+=======
+  # df <- fromJSON(sprintf("[%s]", paste(readLines(myfile), collapse=",")))
+  
+  # See http://stackoverflow.com/questions/29688946/reading-a-huge-json-file-in-r-issues
+  df <- stream_in(file(myfile), pagesize = 10000)
+
+>>>>>>> origin/master
   dim(df)
   names(df)
   df
 } 
+
 
 biz.df <- readmyJSON('./data/yelp_academic_dataset_business.json')
 saveRDS(biz.df, file="./data/biz.RData")
@@ -42,6 +51,44 @@ rm(tip.df)
 user.df <- readmyJSON('./data/yelp_academic_dataset_user.json')
 saveRDS(user.df, file="./data/user.RData")
 rm(user.df)
+
+```
+
+##Alternative solution for low-mem systems
+```{r}
+
+start.time <- proc.time()
+
+#Read json file
+require(jsonlite)
+#See http://www.r-bloggers.com/iterators-in-r/
+require(itertools)
+myfile <- './data/yelp_academic_dataset_review.json'
+con <- ihasNext(ireadLines(myfile))
+
+df <- data.frame()
+numfile <- 1
+
+#process each line and store in raw CSV
+while (hasNext(con)) {
+    d <- nextElem(con)
+    df <- as.data.frame(fromJSON(d))
+    write.csv(df, file=paste("./data/reviews/reviews", numfile, ".csv", sep=""), sep=",", row.names="F")
+    numfile <- numfile+1
+}
+
+#read files and merge
+#See http://www.r-bloggers.com/merging-multiple-data-files-into-one-data-frame/
+multmerge <- function(){
+    myfiles <- list.files(path="./data/reviews/", pattern=".csv", full.names = T)
+    datalist <- lapply(myfiles, function(x){read.csv(file=x,header=T)})
+    Reduce(function(x,y) {merge(x,y)}, datalist)
+    }
+
+multmerge()
+saveRDS(df, file="./data/review.RData")
+
+proc.time() - start.time
 
 ```
 

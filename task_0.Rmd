@@ -74,11 +74,12 @@ while (hasNext(con)) {
 #read files and merge
 #See http://www.r-bloggers.com/merging-multiple-data-files-into-one-data-frame/
 multmerge <- function(){
-    myfiles <- list.files(path="./data/", pattern=".csv", full.names = T)
+    myfiles <- list.files(path="./data/reviews/", pattern=".csv", full.names = T)
     datalist <- lapply(myfiles, function(x){read.csv(file=x,header=T)})
     Reduce(function(x,y) {merge(x,y)}, datalist)
     }
 
+multmerge()
 saveRDS(df, file="./data/review.RData")
 
 proc.time() - start.time

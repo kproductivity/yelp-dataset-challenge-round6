@@ -15,9 +15,9 @@ library(jsonlite)
 readmyJSON <- function(myfile){
   # See http://stackoverflow.com/a/26522000 for overcoming 'Error in
   # feed_push_parser...'
-  # df <- fromJSON(sprintf("[%s]", paste(readLines(myfile), collapse=",")))
+  df <- fromJSON(sprintf("[%s]", paste(readLines(myfile), collapse=",")))
   # See http://stackoverflow.com/questions/29688946/reading-a-huge-json-file-in-r-issues
-  df <- stream_in(file(myfile), pagesize = 10000)
+  #df <- stream_in(file(myfile), pagesize = 10000)
   dim(df)
   names(df)
   df

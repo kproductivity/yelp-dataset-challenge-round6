@@ -49,6 +49,7 @@ rm(user.df)
 ```
 
 ##Alternative solution for low-mem systems
+###just for the sake of learning; I'd rather recommend you to get more RAM!
 ```{r}
 
 start.time <- proc.time()
@@ -67,20 +68,20 @@ numfile <- 1
 while (hasNext(con)) {
     d <- nextElem(con)
     df <- as.data.frame(fromJSON(d))
-    write.csv(df, file=paste("./data/reviews/reviews", numfile, ".csv", sep=""), sep=",", row.names="F")
+    saveRDS(df, file=paste("./data/reviews/reviews", numfile, ".rds", sep=""))
     numfile <- numfile+1
 }
 
 #read files and merge
 #See http://www.r-bloggers.com/merging-multiple-data-files-into-one-data-frame/
 multmerge <- function(){
-    myfiles <- list.files(path="./data/reviews/", pattern=".csv", full.names = T)
-    datalist <- lapply(myfiles, function(x){read.csv(file=x,header=T)})
+    myfiles <- list.files(path="./data/reviews/", pattern=".rds", full.names = T)
+    datalist <- lapply(myfiles, function(x){readRDS(file=x,header=T)})
     Reduce(function(x,y) {merge(x,y)}, datalist)
     }
 
-multmerge()
-saveRDS(df, file="./data/review.RData")
+df <- multmerge()
+saveRDS(df, file="./data/reviews.rds")
 
 proc.time() - start.time
 

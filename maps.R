@@ -42,3 +42,10 @@ mapPoints <- ggmap(map) +
           geom_point(aes(x = biz.ed$longitude, y = biz.ed$latitude),
                          data = biz.ed, size = 1, alpha = 0.5)
 mapPoints
+
+#Only restaurants (as in category)
+biz.ed.rest<-biz.ed[which(grepl("Restaurants", biz.ed$categories)),]
+mapPoints <- ggmap(map) +
+    geom_point(aes(x = biz.ed.rest$longitude, y = biz.ed.rest$latitude),
+               data = biz.ed.rest, size = 1, alpha = 0.5)
+mapPoints

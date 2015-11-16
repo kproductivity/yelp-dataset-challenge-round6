@@ -1,10 +1,14 @@
+#############
+# Load data #
+#############
+
 #Businesses
 biz <- readRDS("biz.rds")
-#from Edinburgh
+##from Edinburgh,
 biz <- biz[which(biz$city == "Edinburgh"), ]
-#open
+##open,
 biz <- biz[which(biz$open==TRUE), ]
-#categorised as Restaurant
+##categorised as Restaurant
 biz <- biz[which(grepl("Restaurants", biz$categories)), -c(2, 4, 6, 8, 9, 11, 15)]
 
 
@@ -37,29 +41,52 @@ reviews <- readRDS("review.rds")
 reviews <- reviews[, -c(6, 7)]
 reviews <- flatten(reviews, recursive = TRUE)
 
+#Users
+users <- readRDS("user.rds")
+##exclude friend network, it would be interesting to analyse this,
+##but I leave it for another research project
+users <- users[,-c(4, 6, 9, 11)] 
+users <- flatten(users, recursive = TRUE)
+users$yelping_since <- as.factor(users$yelping_since)
+users[,c(4:19)][is.na(users[,c(4:19)])] <- 0
 
 #Master
 master <- merge(biz, reviews, by = "business_id")
 master <- master[,-c(1,2)]
-rm(biz, reviews) #always being memory-concious
+rm(reviews) #always being memory-concious
 
 master$stars.diff <- master$stars.x - master$stars.y
 
+#Expand master with user details
+master <- merge(master, users, by = "user_id")
 
-#Random forest to predict stars
+##################################
+# Random forest to predict stars #
+##################################
+
 library(h2o)
 localH2O <- h2o.init(nthreads = -1)
 
+biz.hex <- as.h2o(biz[,-c(1,2)])
 master.hex <- as.h2o(master)
 
-features.x <- colnames(master)[-c(3, 97, 98, 100, 104)]
-fit.rf.x <- h2o.randomForest(x=features.x, y="stars.x",
-                           training_frame=master.hex, ntrees=50, max_depth=100)
-fit.rf.x
-h2o.varimp(fit.rf.x)
+#from business characteristics only
+features <- colnames(biz)[-c(1, 2, 5)]
+fit.rf.biz <- h2o.randomForest(x=features, y="stars.x",
+                               training_frame=biz.hex, ntrees=50, max_depth=100)
+fit.rf.biz
+h2o.varimp(fit.rf.biz)
 
-features.y <- colnames(master)[-c(97, 98, 99, 100, 104)]
-fit.rf.y <- h2o.randomForest(x=features.y, y="stars.y",
-                            training_frame=master.hex, ntrees=50, max_depth=100)
-fit.rf.y
-h2o.varimp(fit.rf.y)
+#from business characteristics augmented with user reviews
+features.review <- colnames(master)[-c(1, 4, 98, 100, 105:122)]
+fit.rf.review <- h2o.randomForest(x=features.review, y="stars.x",
+                                  training_frame=master.hex, ntrees=50, max_depth=100)
+fit.rf.review
+h2o.varimp(fit.rf.review)
+
+#from business characteristics augmented with user reviews and user characteristics
+features.users <- colnames(master)[-c(1, 4, 98, 100)]
+fit.rf.users <- h2o.randomForest(x=features.users, y="stars.x",
+                                  training_frame=master.hex, ntrees=50, max_depth=100)
+fit.rf.users
+h2o.varimp(fit.rf.users)

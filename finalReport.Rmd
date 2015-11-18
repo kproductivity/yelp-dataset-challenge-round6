@@ -1,0 +1,72 @@
+---
+title: "Location based competition in Edinburgh restaurants"
+author: "Francisco Marco-Serrano"
+date: "18 November 2015"
+output: html_document
+---
+
+#Abstract
+
+Location models refer to competition models in economics that link consumer preference for a brand and its location.
+
+The original models are Hotelling's linear city or Salop's circle model, in which the relationship between product characteristics and geographic location determine the competitive landscape; brands compete in terms of location, rather than in price or other characteristics.
+
+Using the Yelp dataset, that includes information on 366K users (consumers), 61K businesses (brands), and 481K business attributes (characteristics than include geographic location), I have tested the empirical application of these economic location models and estimated competition levels in a city.
+
+---
+
+#Introduction
+
+---
+
+#Methods and Data
+
+The full dataset is made up of 1.6M reviews and 500K tips by 366K users for 61K businesses, 481K business attributes (i.e. hours, parking availability, ambience),
+a social network of 366K users, for a total of 2.9M social edges, and the aggregated check-ins over time for each of the 61K businesses.
+
+The dataset can be obtained from: http://www.yelp.com/dataset_challenge
+
+In this project only the Edinburgh businesses categorised as restaurant have been used. As well, the information relating to the social network and check-ins have not been used, leaving it for further research.
+
+
+The data finally used is:
+
+* Business - 945 observations of 98 variables, including location, opening/closing times, and business attributes
+* Users - 366715 observations of 19 variables, including number of fans, account age, number of votes and compliments received
+* Reviews - 10506 observations of variables, including date of the review, votes received, and stars
+
+The three datasets have been merged in a single dataset -master (review-business-user) comprising 10506 observations of 122 variables.
+
+The analysis of the data has been done using random forests (Breiman, 2001). This methodology combines bagging with the random selection of variables to obtain a collection of decision trees with controlled variance. It can be used for classification or regression, and both in supervised and unsupervised mode.
+
+
+*Breiman, L. (2001). "Random Forests". Machine Learning, 45, 5-32.*
+
+---
+
+#Results
+
+The spatial distribution of the restaurants can be seen here:
+
+```{r, echo=FALSE, message=FALSE}
+library(jsonlite)
+library(ggmap)
+
+biz <- readRDS("biz.rds")
+biz <- biz[which(biz$city == "Edinburgh"), ]
+biz <- biz[which(biz$open==TRUE), ]
+biz <- biz[which(grepl("Restaurants", biz$categories)), -c(2, 4, 6, 8, 9, 11, 15)]
+biz <- flatten(biz, recursive = TRUE)
+map <- get_map(location = 'Edimburgh', zoom = 11, maptype = "roadmap")
+mapPoints <- ggmap(map) +
+          geom_point(aes(x = biz$longitude, y = biz$latitude),
+                         data = biz, size = 1, alpha = 0.5)
+mapPoints
+```
+
+
+
+---
+
+#Discussion
+

@@ -2,7 +2,7 @@
 title: "Location based competition in Edinburgh restaurants"
 author: "Francisco Marco-Serrano"
 date: "20 November 2015"
-output: word_document
+output: html_document
 ---
 
 #Abstract
@@ -124,16 +124,14 @@ biz[hours] <- replace(biz[hours], is.na(biz[hours]), "00:00")
 biz[hours] <- lapply(biz[hours], as.factor)
 
 #Run the random forest
-features <- colnames(biz)[-c(1, 2, 5)]
+features <- colnames(biz)[-c(1, 2)]
 ntrees=3000
 
 set.seed(123)
 fit.urf <- randomForest(x=biz[,features], ntree=ntrees, importance=TRUE,mtry=3)
 
-#Top 10 variable importance
-varimp <- importance(fit.urf)
-sort(varimp[,3], decreasing = T)
-varimp[sort(varimp[[3]])][1:10,]
+#Top variable importance
+varImpPlot(fit.urf,type=2)
 
 ```
 
@@ -142,3 +140,12 @@ varimp[sort(varimp[[3]])][1:10,]
 
 #Discussion
 
+Analysing Yelp Academic Dataset we were trying to test the approach that Edinburgh restaurants were following to differentiate themselves from their near competitors.
+
+For testing the hypotheses that the differentiation traits could be either (a) location, (b) quality, or (c) any other characteristics, an unsupervised random forest has been estimated in order to find out the variables of importance in setting the different segments or clusters of restaurants.
+
+When analysing the variables in order of importance, the first 14 variables are related to schedule of the restaurant (open/closing hours); longitude and latitude -related to location- are in position 15th and 16th, with the review count being in position 17th. Quality, represented by the variable *stars* is 18th in the list of variable of importance to determine the clusters, followed by a list of several other attributes.
+
+Then, we can assert that restaurants in Edinburgh are competing in a first round, in terms of schedules, while location is of secondary consideration, followed closely by quality, in third position.
+
+Further analysis could then provide explanations wether these strategies are paying off in term of higher, or more frequent, ratings, or if clusters of competing restaurants are very disimilar between each others in terms of the rest of attributes. In a following stage, this project could try to evaluate the changes in the competing scene forecasting the opening or closing of new restaurants in a defined location.

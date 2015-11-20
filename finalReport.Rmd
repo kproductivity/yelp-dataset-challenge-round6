@@ -27,6 +27,7 @@ The aim of this project is to find out if either (a) **location** is an attribut
 
 
 *Hotelling, H. (1929). "Stability in Competition". Economic Journal, 96(153), 41-57.*
+
 *Salop, S. (1979). "Monopolistic Competition with Outside Goods". Bell Journal of Economics, 10(1), 141-156.*
 
 ---

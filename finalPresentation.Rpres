@@ -1,0 +1,89 @@
+Location based competition in Edinburgh restaurants
+========================================================
+author: Francisco Marco-Serrano
+date: 20 November 2015
+
+
+Introduction
+========================================================
+Competition can be addressed from a perspective of product differentiation. This differentiation can be considered in a multivariate facet.
+
+In the economics literature there are models that consider the 'principle of minimum differentiation', determining competition by businesses differentiating themselves in one or few attributes. Here, we explore the following features:
+
+- Location
+- Quality
+- Other attributes (i.e. opening times, offering, etc)
+
+
+Methods and Data
+========================================================
+
+Data on 945 Edinburgh restaurants from Yelp dataset has been used. See below distribution according to location:
+
+```{r, echo=FALSE, message=FALSE, size="small"}
+library(jsonlite)
+
+biz <- readRDS("biz.rds")
+biz <- biz[which(biz$city == "Edinburgh"), ]
+biz <- biz[which(biz$open==TRUE), ]
+biz <- biz[which(grepl("Restaurants", biz$categories)), -c(2, 4, 6, 8, 9, 11, 15)]
+biz <- flatten(biz, recursive = TRUE)
+
+round(table(cut(biz$latitude, quantile(biz$latitude)),
+      cut(biz$longitude, quantile(biz$longitude)))/945*100,2)
+
+```
+
+The dataset can be obtained from: http://www.yelp.com/dataset_challenge
+
+The analysis of the data has been done using random forests in an unsupervised mode.
+
+
+Results: Variables importance
+========================================================
+
+```{r, echo=FALSE, message=FALSE}
+
+library(randomForest)
+
+#Flatten the data frame to avoid nested structure,
+#which comes from the former json nature of the data
+biz <- flatten(biz, recursive = TRUE)
+
+#NA in Attributes is considered to be FALSE
+#See http://stackoverflow.com/questions/2991514/r-preventing-unlist-to-drop-null-values
+#to solve NULL creating problems when flattening list variables
+biz$`attributes.Accepts Credit Cards`[sapply(biz$`attributes.Accepts Credit Cards`, is.null)] <- NA
+biz$`attributes.Accepts Credit Cards` <- unlist(biz$`attributes.Accepts Credit Cards`,
+                                                recursive = T, use.names = T)
+
+attrib <- grepl("attributes.", names(biz))
+biz[attrib] <- replace(biz[attrib], is.na(biz[attrib]), FALSE)
+biz[attrib] <- lapply(biz[attrib], as.factor)
+
+
+#NA in Hours is considered to be 00:00
+hours <- grepl("hours.", names(biz))
+biz[hours] <- replace(biz[hours], is.na(biz[hours]), "00:00")
+biz[hours] <- lapply(biz[hours], as.factor)
+
+#Run the random forest
+features <- colnames(biz)[-c(1, 2)]
+ntrees=3000
+
+set.seed(123)
+fit.urf <- randomForest(x=biz[,features], ntree=ntrees, importance=TRUE,mtry=3)
+
+#Top variable importance
+varImpPlot(fit.urf,type=2)
+
+```
+
+Discussion
+========================================================
+
+- The first 14 variables are related to schedule of the restaurant (open/closing hours); longitude and latitude -related to location- are in position 15th and 16th, with the review count being in position 17th. Quality, represented by the variable *stars* is 18th in the list of variable of importance to determine the clusters, followed by a list of several other attributes.
+
+- Restaurants in Edinburgh are competing in a first round, in terms of schedules, while location is of secondary consideration, followed closely by quality, in third position.
+
+- Using these results, further research could try to evaluate the changes in the competing scene forecasting the opening or closing of new restaurants in a defined location.

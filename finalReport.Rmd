@@ -1,8 +1,8 @@
 ---
 title: "Location based competition in Edinburgh restaurants"
 author: "Francisco Marco-Serrano"
-date: "18 November 2015"
-output: html_document
+date: "20 November 2015"
+output: word_document
 ---
 
 #Abstract
@@ -16,6 +16,18 @@ Using the Yelp dataset, that includes information on 366K users (consumers), 61K
 ---
 
 #Introduction
+
+From an economics modelling point of view, competition can be addressed from a perspective of product differentiation. This differentiation can be considered in a multivariate (or multiattribute) facet.
+
+Sometimes, the attributes are quite similar and the only differentiation is quality. However, even this feature can be opaque to the consumer; and, here is when services like Yelp's improve the consumption process, by indicating the quality of a product or service. In our case, we intend to analyse the competition model operating in the Edinburgh restaurants, using the Yelp Academic Dataset - Round 6.
+
+A seminal model to analyse this type of competition is that of Hotelling (1929), expanded later by Salop (1979). In these models, there is what Hotelling named as the 'principle of minimum differentiation', which is resolved by businesses differentiating themselves in one or few attributes, being the one explored by Hotelling and Salop the location of a business.
+
+The aim of this project is to find out if either (a) **location** is an attribute that restaurants in Edinburgh are using to differentiate from competition, (b) **quality** is the differentiation attribute, or (c) there is any other feature used for differentiating from competition.
+
+
+*Hotelling, H. (1929). "Stability in Competition". Economic Journal, 96(153), 41-57.*
+*Salop, S. (1979). "Monopolistic Competition with Outside Goods". Bell Journal of Economics, 10(1), 141-156.*
 
 ---
 
@@ -31,7 +43,23 @@ In this project only the Edinburgh businesses categorised as restaurant have bee
 
 The data finally used is:
 
-* Business - 945 observations of 98 variables, including location, opening/closing times, and business attributes
+* Business - 945 observations of 98 variables, including location, opening/closing times, and business attributes. Businesses are ranked by the users on a 1 to 5 star-system. The descriptive statistics for Edinburgh restaurants are:
+
+```{r, echo=FALSE, message=FALSE}
+
+library(jsonlite)
+
+biz <- readRDS("biz.rds")
+biz <- biz[which(biz$city == "Edinburgh"), ]
+biz <- biz[which(biz$open==TRUE), ]
+biz <- biz[which(grepl("Restaurants", biz$categories)), -c(2, 4, 6, 8, 9, 11, 15)]
+biz <- flatten(biz, recursive = TRUE)
+
+summary(biz$stars)
+
+```
+
+
 * Users - 366715 observations of 19 variables, including number of fans, account age, number of votes and compliments received
 * Reviews - 10506 observations of variables, including date of the review, votes received, and stars
 
@@ -49,14 +77,9 @@ The analysis of the data has been done using random forests (Breiman, 2001). Thi
 The spatial distribution of the restaurants can be seen here:
 
 ```{r, echo=FALSE, message=FALSE}
-library(jsonlite)
+
 library(ggmap)
 
-biz <- readRDS("biz.rds")
-biz <- biz[which(biz$city == "Edinburgh"), ]
-biz <- biz[which(biz$open==TRUE), ]
-biz <- biz[which(grepl("Restaurants", biz$categories)), -c(2, 4, 6, 8, 9, 11, 15)]
-biz <- flatten(biz, recursive = TRUE)
 map <- get_map(location = 'Edimburgh', zoom = 11, maptype = "roadmap")
 mapPoints <- ggmap(map) +
           geom_point(aes(x = biz$longitude, y = biz$latitude),
@@ -64,6 +87,55 @@ mapPoints <- ggmap(map) +
 mapPoints
 ```
 
+And the distribution (in %) of businesses based on their location coordinates:
+
+```{r, echo=FALSE, message=FALSE}
+
+round(table(cut(biz$latitude, quantile(biz$latitude)),
+      cut(biz$longitude, quantile(biz$longitude)))/945*100,2)
+
+```
+
+
+Running an unsupervised random forest on the businesses dataset, to find out the Top 10 variables in importance that classify the businesses:
+
+```{r, echo=FALSE, message=FALSE}
+library(randomForest)
+
+#Flatten the data frame to avoid nested structure,
+#which comes from the former json nature of the data
+biz <- flatten(biz, recursive = TRUE)
+
+#NA in Attributes is considered to be FALSE
+#See http://stackoverflow.com/questions/2991514/r-preventing-unlist-to-drop-null-values
+#to solve NULL creating problems when flattening list variables
+biz$`attributes.Accepts Credit Cards`[sapply(biz$`attributes.Accepts Credit Cards`, is.null)] <- NA
+biz$`attributes.Accepts Credit Cards` <- unlist(biz$`attributes.Accepts Credit Cards`,
+                                                recursive = T, use.names = T)
+
+attrib <- grepl("attributes.", names(biz))
+biz[attrib] <- replace(biz[attrib], is.na(biz[attrib]), FALSE)
+biz[attrib] <- lapply(biz[attrib], as.factor)
+
+
+#NA in Hours is considered to be 00:00
+hours <- grepl("hours.", names(biz))
+biz[hours] <- replace(biz[hours], is.na(biz[hours]), "00:00")
+biz[hours] <- lapply(biz[hours], as.factor)
+
+#Run the random forest
+features <- colnames(biz)[-c(1, 2, 5)]
+ntrees=3000
+
+set.seed(123)
+fit.urf <- randomForest(x=biz[,features], ntree=ntrees, importance=TRUE,mtry=3)
+
+#Top 10 variable importance
+varimp <- importance(fit.urf)
+sort(varimp[,3], decreasing = T)
+varimp[sort(varimp[[3]])][1:10,]
+
+```
 
 
 ---
